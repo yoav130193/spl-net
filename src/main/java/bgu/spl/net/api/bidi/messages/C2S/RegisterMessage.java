@@ -7,8 +7,8 @@ public class RegisterMessage extends Message {
     private String userName;
     private String password;
 
-    public RegisterMessage(int opCode, String userName, String password) {
-        super(opCode);
+    public RegisterMessage(String userName, String password) {
+        super(1);
         this.userName = userName;
         this.password = password;
     }
