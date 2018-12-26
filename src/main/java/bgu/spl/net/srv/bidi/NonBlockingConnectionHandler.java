@@ -2,6 +2,7 @@ package bgu.spl.net.srv.bidi;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.bidi.BidiMessagingProtocol;
+import bgu.spl.net.api.bidi.Connections;
 import bgu.spl.net.srv.bidi.Reactor;
 
 import java.io.IOException;
@@ -12,10 +13,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
-    @Override
-    public void send(T msg) {
 
-    }
 
     private static final int BUFFER_ALLOCATION_SIZE = 1 << 13; //8k
     private static final ConcurrentLinkedQueue<ByteBuffer> BUFFER_POOL = new ConcurrentLinkedQueue<>();
@@ -25,16 +23,22 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     private final Queue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<>();
     private final SocketChannel chan;
     private final Reactor reactor;
+    private final Connections<T> connections;
+    private final int connectionId;
 
     public NonBlockingConnectionHandler(
             MessageEncoderDecoder<T> reader,
             BidiMessagingProtocol<T> protocol,
             SocketChannel chan,
-            Reactor reactor) {
+            Reactor reactor,
+            Connections connections,
+            int connectionId) {
         this.chan = chan;
         this.encdec = reader;
         this.protocol = protocol;
         this.reactor = reactor;
+        this.connections = connections;
+        this.connectionId = connectionId;
     }
 
     public Runnable continueRead() {
@@ -53,14 +57,8 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
                 try {
                     while (buf.hasRemaining()) {
                         T nextMessage = encdec.decodeNextByte(buf.get());
-                        if (nextMessage != null) {
-                            //TODO response via send
-//                            T response = protocol.process(nextMessage);
-//                            if (response != null) {
-//                                writeQueue.add(ByteBuffer.wrap(encdec.encode(response)));
-//                                reactor.updateInterestedOps(chan, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-//                            }
-                        }
+                        if (nextMessage != null)
+                            protocol.process(nextMessage);
                     }
                 } finally {
                     releaseBuffer(buf);
@@ -73,6 +71,14 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         }
 
     }
+    public BidiMessagingProtocol<T> getProtocol() {
+        return protocol;
+    }
+    @Override
+    public void send(T msg) {
+        writeQueue.add(ByteBuffer.wrap(encdec.encode(msg)));
+        reactor.updateInterestedOps(chan, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+    }
 
     public void close() {
         try {
@@ -80,6 +86,8 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        connections.disconnect(connectionId);
+
     }
 
     public boolean isClosed() {

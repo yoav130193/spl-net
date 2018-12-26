@@ -2,6 +2,7 @@ package bgu.spl.net.srv.bidi;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.bidi.BidiMessagingProtocol;
+import bgu.spl.net.api.bidi.ConnectionsImpl;
 import bgu.spl.net.srv.Server;
 
 import java.io.IOException;
@@ -17,6 +18,8 @@ public class Reactor<T> implements Server<T> {
     private final Supplier<MessageEncoderDecoder<T>> readerFactory;
     private final ActorThreadPool pool;
     private Selector selector;
+    private int uniqueId;
+    private ConnectionsImpl<T> connections;
 
     private Thread selectorThread;
     private final ConcurrentLinkedQueue<Runnable> selectorTasks = new ConcurrentLinkedQueue<>();
@@ -31,6 +34,8 @@ public class Reactor<T> implements Server<T> {
         this.port = port;
         this.protocolFactory = protocolFactory;
         this.readerFactory = readerFactory;
+        this.uniqueId =0;
+        this.connections = new ConnectionsImpl<T>();
     }
 
     @Override
@@ -97,7 +102,11 @@ public class Reactor<T> implements Server<T> {
                 readerFactory.get(),
                 protocolFactory.get(),
                 clientChan,
-                this);
+                this,
+                connections,
+                uniqueId);
+        connections.connect(uniqueId, handler);
+        handler.getProtocol().start(uniqueId++, connections);
         clientChan.register(selector, SelectionKey.OP_READ, handler);
     }
 
