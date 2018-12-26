@@ -14,6 +14,7 @@ public class AckMessage extends Message {
     private int numOfFollowing;
 
 
+    //followers
     public AckMessage(int messageOpcode, String userName, List<String> userNameList) {
         super(10);
         this.messageOpcode = messageOpcode;
@@ -22,7 +23,7 @@ public class AckMessage extends Message {
 
     }
 
-
+    // Stat
     public AckMessage(int messageOpcode, int numOfPosts, int numOfFollowers, int numOfFollowing) {
         super(10);
         this.messageOpcode = messageOpcode;
@@ -31,6 +32,7 @@ public class AckMessage extends Message {
         this.numOfFollowers = numOfFollowers;
     }
 
+    //all the rest
     public AckMessage(int messageOpcode) {
         super(10);
         this.messageOpcode = messageOpcode;
