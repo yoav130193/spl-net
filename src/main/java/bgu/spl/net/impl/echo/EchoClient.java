@@ -33,6 +33,22 @@ public class EchoClient {
             System.out.println("awaiting response");
             String line = in.readLine();
             System.out.println("message from server: " + line);
+
+            out.write("bye");
+            out.newLine();
+            out.flush();
+
+            System.out.println("awaiting response");
+            line = in.readLine();
+            System.out.println("message from server: " + line);
+
+            out.write(args[1]);
+            out.newLine();
+            out.flush();
+
+            System.out.println("awaiting response");
+            line = in.readLine();
+            System.out.println("message from server: " + line);
         }
     }
 }
