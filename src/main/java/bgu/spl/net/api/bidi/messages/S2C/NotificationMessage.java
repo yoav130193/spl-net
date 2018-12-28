@@ -3,17 +3,17 @@ package bgu.spl.net.api.bidi.messages.S2C;
 import bgu.spl.net.api.bidi.messages.Message;
 
 public class NotificationMessage extends Message {
-    private char notificationType;
+    private boolean notificationType;
     private String postingUser;
     private String content;
-    public NotificationMessage(char notificationType,String postingUser,String content) {
+    public NotificationMessage(boolean notificationType,String postingUser,String content) {
         super(9);
         this.notificationType = notificationType;
         this.postingUser = postingUser;
         this.content = content;
     }
 
-    public char getNotificationType() {
+    public boolean getNotificationType() {
         return notificationType;
     }
 

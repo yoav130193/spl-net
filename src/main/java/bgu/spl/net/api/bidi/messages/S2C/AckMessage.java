@@ -7,18 +7,18 @@ import java.util.List;
 public class AckMessage extends Message {
 
     private int messageOpcode;
-    private String userName;
+    private int numOfUsers;
     private List<String> userNameList;
     private int numOfPosts;
     private int numOfFollowers;
     private int numOfFollowing;
 
 
-    //followers
-    public AckMessage(int messageOpcode, String userName, List<String> userNameList) {
+    //followers or userlist
+    public AckMessage(int messageOpcode, int numOfUsers, List<String> userNameList) {
         super(10);
         this.messageOpcode = messageOpcode;
-        this.userName = userName;
+        this.numOfUsers = numOfUsers;
         this.userNameList = userNameList;
 
     }
@@ -50,8 +50,8 @@ public class AckMessage extends Message {
         return messageOpcode;
     }
 
-    public String getUserName() {
-        return userName;
+    public int getNumOfUsers() {
+        return numOfUsers;
     }
 
     public int getNumOfFollowers() {

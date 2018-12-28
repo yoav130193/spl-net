@@ -106,6 +106,7 @@ public class Reactor<T> implements Server<T> {
                 connections,
                 uniqueId);
         connections.connect(uniqueId, handler);
+        //TODO: change start (description in PDF)
         handler.getProtocol().start(uniqueId++, connections);
         clientChan.register(selector, SelectionKey.OP_READ, handler);
     }
