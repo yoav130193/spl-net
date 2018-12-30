@@ -69,7 +69,7 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                 if(messageOpcode==4 || messageOpcode==7){
                         byte[] numOfUsers = new byte[2];
                         ByteBuffer.wrap(numOfUsers).putInt(ackMessage.getNumOfUsers());
-                        List<String> userNameList = ackMessage.getUserNameList();
+                        List<String> userNameList = ackMessage.getUserNameListSring();
                         byte[][] userNameListB = new byte[userNameList.size()*2][];
                         for (int i = 0; i < userNameListB.length; i++) {
                             userNameListB[i] = userNameList.remove(i).getBytes();

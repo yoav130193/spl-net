@@ -13,7 +13,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
 
     private boolean shouldTerminate = false;
     private int connectionId;
-    private Connections<java.lang.String> connections;
+    private Connections<Message> connections;
     private AllUsers allUsers;
 
     private CoolProtocol() {
@@ -38,10 +38,10 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 RegisterMessage registerMessage = (RegisterMessage) message;
                 user = allUsers.getUser(registerMessage.getUserName());
                 if (user != null) { // a user is already registered with this message
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(1));
                 } else { // new user !!! :)
                     allUsers.getAllUserList().add(user);
-                    //TODO - create an AckMessage
+                   connections.send(connectionId,new AckMessage(1));
                 }
                 break;
             case 2:
@@ -49,14 +49,14 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 user = allUsers.getUser(loginMessage.getUserName());
                 if (user == null || user.getPassword().equals(loginMessage.getPassword())) {
                     // user doesn't exist or password wrong!
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(2));
                 } else if (user.isLogged()) {
                     // user is already logged on
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(2));
                 } else {
                     // log in the fucking user
                     allUsers.getLoggedUsers().add(user);
-                    //TODO - create an AckMessage
+                    connections.send(connectionId,new AckMessage(2));
                 }
 
                 break;
@@ -65,11 +65,11 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 //TODO- raz, I'm not sure that I did like the instructions!!!
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(3));
                 } else {
                     // I am logged
                     allUsers.getLoggedUsers().remove(me);
-                    //TODO - create an AckMessage
+                    connections.send(connectionId,new AckMessage(3));
                 }
                 break;
             case 4:
@@ -79,7 +79,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
 
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(4));
                 } else {
                     // I am logged
 
@@ -115,12 +115,9 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 }
                 if (usersForAck.size() == 0) {
                     //nobody had changed
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(4));
                 } else {
-                    AckMessage ackMessage = new AckMessage(4,
-                            usersForAck,
-                            usersForAck.size());
-                    //TODO - send an AckMessage
+                    connections.send(connectionId,new AckMessage(4,usersForAck,usersForAck.size()));
                 }
 
                 break;
@@ -129,7 +126,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 PostMessage postMessage = (PostMessage) message;
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(5));
                 } else {
                     //I am logged in
                     PostPmMessages newPost = new PostPmMessages(
@@ -166,7 +163,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 PmMessage pmMessage = (PmMessage) message;
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(6));
                 } else {
                     // I am logged in
                     PostPmMessages newPM = new PostPmMessages(
@@ -175,7 +172,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                             PostPmMessages.MessageType.PMMESSAGE);
                     if (allUsers.getUser(pmMessage.getUserName()) == null) {
                         //recipient user is not registered
-                        //TODO- create an ErrorMessage!!
+                        connections.send(connectionId,new ErrorMessage(6));
                     } else {
                         //recipient user registered
                         // add post to the recipient user
@@ -196,12 +193,11 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 UserListMessage userListMessage = (UserListMessage) message;
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(7));
                 } else {
                     //I am logged in
-                    AckMessage ackMessage = new AckMessage(7,
-                            allUsers.getAllUserList().size(), allUsers.getAllUserList());
-                    //TODO- send an AckMessage!!
+                    connections.send(connectionId,new AckMessage(7,
+                            allUsers.getAllUserList().size(), allUsers.getAllUserList()));
 
                 }
                 break;
@@ -210,20 +206,19 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
 
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    //TODO- create an ErrorMessage!!
+                    connections.send(connectionId,new ErrorMessage(8));
                 } else {
                     //I am logged in
                     if (allUsers.getUser(statMessage.getUserName()) == null) {
                         // userName not registered
-                        //TODO- create an ErrorMessage!!
+                        connections.send(connectionId,new ErrorMessage(8));
                     } else {
                         // userName is registered
                         User statUser = allUsers.getUser(statMessage.getUserName());
-                        AckMessage ackMessage = new AckMessage(8,
+                        connections.send(connectionId,new AckMessage(8,
                                 statUser.getSentPostPmMessagesList().size()
                                 , statUser.getAreFollowedUserList().size()
-                                , statUser.getFollowUserList().size());
-                        //TODO- send an AckMessage!!
+                                , statUser.getFollowUserList().size()));
                     }
                 }
 
