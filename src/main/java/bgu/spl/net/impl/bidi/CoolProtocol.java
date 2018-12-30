@@ -31,17 +31,18 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
         User user;
         //TODO- raz how the fuck to find out who am I
         // just a temporary user that we need to change
-        User me = new User();
+        User me = allUsers.getUser(connectionId);
+
         switch (message.opCode) {
 
             case 1:
                 RegisterMessage registerMessage = (RegisterMessage) message;
                 user = allUsers.getUser(registerMessage.getUserName());
                 if (user != null) { // a user is already registered with this message
-                    connections.send(connectionId,new ErrorMessage(1));
+                    connections.send(connectionId, new ErrorMessage(1));
                 } else { // new user !!! :)
                     allUsers.getAllUserList().add(user);
-                   connections.send(connectionId,new AckMessage(1));
+                    connections.send(connectionId, new AckMessage(1));
                 }
                 break;
             case 2:
@@ -49,14 +50,14 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 user = allUsers.getUser(loginMessage.getUserName());
                 if (user == null || user.getPassword().equals(loginMessage.getPassword())) {
                     // user doesn't exist or password wrong!
-                    connections.send(connectionId,new ErrorMessage(2));
+                    connections.send(connectionId, new ErrorMessage(2));
                 } else if (user.isLogged()) {
                     // user is already logged on
-                    connections.send(connectionId,new ErrorMessage(2));
+                    connections.send(connectionId, new ErrorMessage(2));
                 } else {
                     // log in the fucking user
                     allUsers.getLoggedUsers().add(user);
-                    connections.send(connectionId,new AckMessage(2));
+                    connections.send(connectionId, new AckMessage(2));
                 }
 
                 break;
@@ -65,11 +66,11 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 //TODO- raz, I'm not sure that I did like the instructions!!!
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    connections.send(connectionId,new ErrorMessage(3));
+                    connections.send(connectionId, new ErrorMessage(3));
                 } else {
                     // I am logged
                     allUsers.getLoggedUsers().remove(me);
-                    connections.send(connectionId,new AckMessage(3));
+                    connections.send(connectionId, new AckMessage(3));
                 }
                 break;
             case 4:
@@ -79,7 +80,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
 
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    connections.send(connectionId,new ErrorMessage(4));
+                    connections.send(connectionId, new ErrorMessage(4));
                 } else {
                     // I am logged
 
@@ -115,18 +116,17 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 }
                 if (usersForAck.size() == 0) {
                     //nobody had changed
-                    connections.send(connectionId,new ErrorMessage(4));
+                    connections.send(connectionId, new ErrorMessage(4));
                 } else {
-                    connections.send(connectionId,new AckMessage(4,usersForAck,usersForAck.size()));
+                    connections.send(connectionId, new AckMessage(4, usersForAck, usersForAck.size()));
                 }
 
                 break;
             case 5:
-                //TODO send notifcation!!
                 PostMessage postMessage = (PostMessage) message;
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    connections.send(connectionId,new ErrorMessage(5));
+                    connections.send(connectionId, new ErrorMessage(5));
                 } else {
                     //I am logged in
                     PostPmMessages newPost = new PostPmMessages(
@@ -141,21 +141,31 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     // add post to all my followers
                     List<String> myFollowers = me.getAreFollowedUserList();
                     for (int i = 0; i < myFollowers.size(); i++) {
-                        if (allUsers.getUser(myFollowers.get(i)) != null)
-                            allUsers.getUser(myFollowers.get(i)).getGotPostPmMessagesList().add(newPost);
+                        if (allUsers.getUser(myFollowers.get(i)) != null) {
+                            User sendUser = allUsers.getUser(myFollowers.get(i));
+                            sendUser.getGotPostPmMessagesList().add(newPost);
+                            connections.send(sendUser.getConectionId(), new NotificationMessage(
+                                    true,
+                                    sendUser.getUsername(),
+                                    newPost.getMessage()));
+                        }
                     }
 
                     // add post to all specific users
                     List<String> specificUsers = postMessage.getExtraUserNames();
                     for (int i = 0; i < specificUsers.size(); i++) {
-                        if (allUsers.getUser(specificUsers.get(i)) != null)
-                            allUsers.getUser(specificUsers.get(i)).getGotPostPmMessagesList().add(newPost);
+                        if (allUsers.getUser(specificUsers.get(i)) != null) {
+                            User specificUser = allUsers.getUser(specificUsers.get(i));
+                            specificUser.getGotPostPmMessagesList().add(newPost);
+                            connections.send(specificUser.getConectionId(), new NotificationMessage(
+                                    true,
+                                    specificUser.getUsername(),
+                                    newPost.getMessage()));
+                        }
                     }
 
                     // add post to my sent message
                     me.getSentPostPmMessagesList().add(newPost);
-
-                    //TODO- create an NotificationMessage to every fucking one!!
 
                 }
                 break;
@@ -163,7 +173,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 PmMessage pmMessage = (PmMessage) message;
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    connections.send(connectionId,new ErrorMessage(6));
+                    connections.send(connectionId, new ErrorMessage(6));
                 } else {
                     // I am logged in
                     PostPmMessages newPM = new PostPmMessages(
@@ -172,20 +182,23 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                             PostPmMessages.MessageType.PMMESSAGE);
                     if (allUsers.getUser(pmMessage.getUserName()) == null) {
                         //recipient user is not registered
-                        connections.send(connectionId,new ErrorMessage(6));
+                        connections.send(connectionId, new ErrorMessage(6));
                     } else {
                         //recipient user registered
                         // add post to the recipient user
-                        allUsers.getUser(pmMessage.getUserName()).getGotPostPmMessagesList().add(newPM);
+                        User recipientUser = allUsers.getUser(pmMessage.getUserName());
+                        recipientUser.getGotPostPmMessagesList().add(newPM);
 
                         //add post to the list of PostPMmessages
                         AllPostPmMessages.getInstance().getPostPmMessagesList()
                                 .add(newPM);
-
+                        connections.send(recipientUser.getConectionId(),
+                                new NotificationMessage(false,
+                                        recipientUser.getUsername(),
+                                        newPM.getMessage()));
                         // add post to my sent message
                         me.getSentPostPmMessagesList().add(newPM);
 
-                        //TODO- create an NotificationMessage!
                     }
                 }
                 break;
@@ -193,10 +206,10 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 UserListMessage userListMessage = (UserListMessage) message;
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    connections.send(connectionId,new ErrorMessage(7));
+                    connections.send(connectionId, new ErrorMessage(7));
                 } else {
                     //I am logged in
-                    connections.send(connectionId,new AckMessage(7,
+                    connections.send(connectionId, new AckMessage(7,
                             allUsers.getAllUserList().size(), allUsers.getAllUserList()));
 
                 }
@@ -206,16 +219,16 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
 
                 if (!allUsers.getLoggedUsers().contains(me)) {
                     //I am not logged in
-                    connections.send(connectionId,new ErrorMessage(8));
+                    connections.send(connectionId, new ErrorMessage(8));
                 } else {
                     //I am logged in
                     if (allUsers.getUser(statMessage.getUserName()) == null) {
                         // userName not registered
-                        connections.send(connectionId,new ErrorMessage(8));
+                        connections.send(connectionId, new ErrorMessage(8));
                     } else {
                         // userName is registered
                         User statUser = allUsers.getUser(statMessage.getUserName());
-                        connections.send(connectionId,new AckMessage(8,
+                        connections.send(connectionId, new AckMessage(8,
                                 statUser.getSentPostPmMessagesList().size()
                                 , statUser.getAreFollowedUserList().size()
                                 , statUser.getFollowUserList().size()));

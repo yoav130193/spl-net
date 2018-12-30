@@ -4,8 +4,9 @@ import java.util.List;
 
 public class User {
 
-    private java.lang.String username;
-    private java.lang.String password;
+    private int conectionId;
+    private String username;
+    private String password;
     private boolean logged;
     private List<String> followUserList; // who do I follow
     private List<String> areFollowedUserList; // who follow me
@@ -48,5 +49,9 @@ public class User {
 
     public List<PostPmMessages> getSentPostPmMessagesList() {
         return sentPostPmMessagesList;
+    }
+
+    public int getConectionId() {
+        return conectionId;
     }
 }

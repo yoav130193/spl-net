@@ -44,4 +44,12 @@ public class AllUsers {
         return loggedUsers.size();
     }
 
+    public User getUser(int connectionId) {
+
+        for (int i = 0; i < allUserList.size(); i++) {
+            if (allUserList.get(i).getConectionId() == connectionId) return allUserList.get(i);
+        }
+        return null;
+    }
+
 }
