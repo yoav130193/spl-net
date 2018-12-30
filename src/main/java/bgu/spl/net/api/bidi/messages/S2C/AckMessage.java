@@ -1,6 +1,7 @@
 package bgu.spl.net.api.bidi.messages.S2C;
 
 import bgu.spl.net.api.bidi.messages.Message;
+import bgu.spl.net.impl.bidi.User;
 
 import java.util.List;
 
@@ -8,20 +9,33 @@ public class AckMessage extends Message {
 
     private int messageOpcode;
     private int numOfUsers;
-    private List<String> userNameList;
+    //TODO - raz changed this list to user list! look if it affects your encode
+    private List<User> userNameList;
+
+    private List<String> userNameListSring;
     private int numOfPosts;
     private int numOfFollowers;
     private int numOfFollowing;
 
 
-    //followers or userlist
-    public AckMessage(int messageOpcode, int numOfUsers, List<String> userNameList) {
+    //Follow
+    public AckMessage(int messageOpcode, List<String> userNameListString, int numOfUsers) {
+        super(10);
+        this.messageOpcode = messageOpcode;
+        this.numOfUsers = numOfUsers;
+        this.userNameListSring = userNameListString;
+
+    }
+
+    //Userlist
+    public AckMessage(int messageOpcode, int numOfUsers, List<User> userNameList) {
         super(10);
         this.messageOpcode = messageOpcode;
         this.numOfUsers = numOfUsers;
         this.userNameList = userNameList;
 
     }
+
 
     // Stat
     public AckMessage(int messageOpcode, int numOfPosts, int numOfFollowers, int numOfFollowing) {
@@ -66,8 +80,12 @@ public class AckMessage extends Message {
         return numOfPosts;
     }
 
-    public List<String> getUserNameList() {
+    public List<User> getUserNameList() {
         return userNameList;
+    }
+
+    public List<String> getUserNameListSring() {
+        return userNameListSring;
     }
 
 }

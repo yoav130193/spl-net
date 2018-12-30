@@ -17,4 +17,16 @@ public class FollowMessage extends Message {
         this.numOfUsers = numOfUsers;
         this.userNameList = userNameList;
     }
+
+    public List<String> getUserNameList() {
+        return userNameList;
+    }
+
+    public int getNumOfUsers() {
+        return numOfUsers;
+    }
+
+    public boolean isFollow() {
+        return follow;
+    }
 }
