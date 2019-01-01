@@ -2,9 +2,8 @@ package bgu.spl.net.api.bidi;
 
 import bgu.spl.net.srv.bidi.ConnectionHandler;
 
-
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionsImpl<T> implements Connections<T> {
 
@@ -12,7 +11,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
 
     public ConnectionsImpl() {
-        connectionHandlerMap = new HashMap<>();
+        connectionHandlerMap = new ConcurrentHashMap<>();
 
     }
 
@@ -45,8 +44,12 @@ public class ConnectionsImpl<T> implements Connections<T> {
         //TODO- further research
     }
 
-    public void connect(int connectionId, ConnectionHandler connectionHandler){
-        connectionHandlerMap.put(connectionId,connectionHandler);
+    public void connect(int connectionId, ConnectionHandler connectionHandler) {
+        connectionHandlerMap.put(connectionId, connectionHandler);
 
+    }
+
+    public int getSize() {
+        return connectionHandlerMap.size();
     }
 }

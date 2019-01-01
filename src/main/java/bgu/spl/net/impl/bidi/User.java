@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.bidi;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class User {
@@ -13,6 +14,17 @@ public class User {
     private List<PostPmMessages> gotPostPmMessagesList; // post/pm that someone posted for you
     private List<PostPmMessages> sentPostPmMessagesList; // post/pm that you posted
 
+
+    public User(int conectionId, String username, String password) {
+        this.conectionId = conectionId;
+        this.username = username;
+        this.password = password;
+        this.logged = false;
+        this.followUserList = new LinkedList<>();
+        this.areFollowedUserList = new LinkedList<>();
+        this.gotPostPmMessagesList = new LinkedList<>();
+        this.sentPostPmMessagesList = new LinkedList<>();
+    }
 
     public java.lang.String getPassword() {
         return password;
@@ -53,5 +65,9 @@ public class User {
 
     public int getConectionId() {
         return conectionId;
+    }
+
+    public void setConnectionId(int connectionId) {
+        this.conectionId = connectionId;
     }
 }

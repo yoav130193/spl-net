@@ -8,18 +8,11 @@ public class AllUsers {
     private List<User> allUserList;
     private List<User> loggedUsers;
 
-    private static class SingletonHolder {
-        private static AllUsers instance = new AllUsers();
-    }
-
-    private AllUsers() {
+    public AllUsers() {
         allUserList = new ArrayList<>();
         loggedUsers = new ArrayList<>();
     }
 
-    public static AllUsers getInstance() {
-        return SingletonHolder.instance;
-    }
 
     public void addToList(User user) {
         allUserList.add(user);
@@ -44,6 +37,11 @@ public class AllUsers {
         return loggedUsers.size();
     }
 
+    public boolean addUser(User user){
+        allUserList.add(user);
+        return true;
+    }
+
     public User getUser(int connectionId) {
 
         for (int i = 0; i < allUserList.size(); i++) {
@@ -52,4 +50,8 @@ public class AllUsers {
         return null;
     }
 
+    public boolean logUser(User user) {
+        loggedUsers.add(user);
+        return true;
+    }
 }

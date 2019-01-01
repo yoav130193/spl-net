@@ -7,16 +7,8 @@ public class AllPostPmMessages {
 
     List<PostPmMessages> postPmMessagesList;
 
-    private static class SingletonHolder {
-        private static AllPostPmMessages instance = new AllPostPmMessages();
-    }
-
-    private AllPostPmMessages() {
+    public AllPostPmMessages() {
         postPmMessagesList = new ArrayList<>();
-    }
-
-    public static AllPostPmMessages getInstance() {
-        return AllPostPmMessages.SingletonHolder.instance;
     }
 
     public List<PostPmMessages> getPostPmMessagesList() {

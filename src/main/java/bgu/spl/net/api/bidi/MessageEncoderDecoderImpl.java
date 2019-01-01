@@ -42,15 +42,16 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
      */
     @Override
     public byte[] encode(Message message) {
-        byte[] messageB = new byte[]{};
+        byte[] messageB;
         byte[][] arguments = new byte[][]{};
 
         int opcode = message.getOpCode();
         byte[] opcodeB = new byte[2];
-        ByteBuffer.wrap(opcodeB).putInt(opcode);
+        opcodeB[0]=0;
 
         switch (opcode){
             case 9:{
+                opcodeB[1]=9;
                 NotificationMessage notificationMessage = (NotificationMessage) message;
                 byte[] notificationType = new byte[]{0};
                 if (notificationMessage.getNotificationType())
@@ -61,6 +62,7 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                 break;
             }
             case 10:{
+                opcodeB[1]=10;
                 AckMessage ackMessage = (AckMessage) message;
                 int messageOpcode = ackMessage.getMessageOpcode();
                 byte[] messageOpcodeB = new byte[2];
@@ -92,12 +94,16 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                 break;
             }
             case 11:{
+                opcodeB[1]=11;
                 ErrorMessage errorMessage = (ErrorMessage) message;
                 int messageOpcode = errorMessage.getMessageOpcode();
                 byte[] messageOpcodeB = new byte[2];
                 ByteBuffer.wrap(messageOpcodeB).putInt(messageOpcode);
                 arguments = new byte[][]{opcodeB,messageOpcodeB};
                 break;
+            }
+            default:{
+                return null;
             }
         }
         messageB = merge(arguments);
@@ -129,7 +135,7 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
     private Message popMessage() {
         Message message = null;
         byte[] opCodeB = {bytes[0], bytes[1]};
-        int opCode = ByteBuffer.wrap(opCodeB).getInt();
+        byte opCode = opCodeB[1];
         switch (opCode) {
             case 1: {
                 LinkedList<byte[]> arguments = findArguments(bytes, 2);
