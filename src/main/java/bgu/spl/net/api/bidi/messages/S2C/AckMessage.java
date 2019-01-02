@@ -9,8 +9,7 @@ public class AckMessage extends Message {
 
     private int messageOpcode;
     private int numOfUsers;
-    //TODO - raz changed this list to user list! look if it affects your encode
-    private List<User> userNameList;
+  //  private List<User> userNameList;
 
     private List<String> userNameListSring;
     private int numOfPosts;
@@ -28,11 +27,11 @@ public class AckMessage extends Message {
     }
 
     //Userlist
-    public AckMessage(int messageOpcode, int numOfUsers, List<User> userNameList) {
+    public AckMessage(int messageOpcode, int numOfUsers, List<String> userNameList) {
         super(10);
         this.messageOpcode = messageOpcode;
         this.numOfUsers = numOfUsers;
-        this.userNameList = userNameList;
+        this.userNameListSring = userNameList;
 
     }
 
@@ -80,9 +79,11 @@ public class AckMessage extends Message {
         return numOfPosts;
     }
 
+    /*
     public List<User> getUserNameList() {
         return userNameList;
     }
+    */
 
     public List<String> getUserNameListSring() {
         return userNameListSring;

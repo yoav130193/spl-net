@@ -1,7 +1,14 @@
 package bgu.spl.net.impl.bidi;
 
+import bgu.spl.net.api.bidi.messages.Message;
+import bgu.spl.net.api.bidi.messages.S2C.NotificationMessage;
+
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class User {
 
@@ -13,7 +20,7 @@ public class User {
     private List<String> areFollowedUserList; // who follow me
     private List<PostPmMessages> gotPostPmMessagesList; // post/pm that someone posted for you
     private List<PostPmMessages> sentPostPmMessagesList; // post/pm that you posted
-
+    private BlockingQueue<NotificationMessage> notifications;
 
     public User(int conectionId, String username, String password) {
         this.conectionId = conectionId;
@@ -24,6 +31,7 @@ public class User {
         this.areFollowedUserList = new LinkedList<>();
         this.gotPostPmMessagesList = new LinkedList<>();
         this.sentPostPmMessagesList = new LinkedList<>();
+        this.notifications = new LinkedBlockingQueue<>();
     }
 
     public java.lang.String getPassword() {
@@ -69,5 +77,21 @@ public class User {
 
     public void setConnectionId(int connectionId) {
         this.conectionId = connectionId;
+    }
+
+    public Message getNotification() {
+       return notifications.poll();
+    }
+
+    public boolean hasNotifications() {
+        return !notifications.isEmpty();
+    }
+
+    public void addAwaitingMessage(NotificationMessage notification) {
+        try {
+            this.notifications.put(notification);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

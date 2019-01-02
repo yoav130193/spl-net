@@ -73,9 +73,9 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                         ByteBuffer.wrap(numOfUsers).putShort((short)ackMessage.getNumOfUsers());
                         List<String> userNameList = ackMessage.getUserNameListSring();
                         byte[][] userNameListB = new byte[userNameList.size()*2][];
-                        for (int i = 0; i < userNameListB.length; i++) {
-                            userNameListB[i] = userNameList.remove(i).getBytes();
-                            userNameListB[++i] = new byte[]{0};
+                        for (int i = 0; i < userNameList.size(); i++) {
+                            userNameListB[2*i] = userNameList.get(i).getBytes();
+                            userNameListB[2*i+1] = new byte[]{0};
                         }
                          arguments= new byte[][]{opcodeB,messageOpcodeB,numOfUsers,merge(userNameListB),{'\r'}};
                 }
@@ -162,7 +162,7 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                 boolean follow = false;
                 if (followB == 0)
                     follow = true;
-                int numOfUsers = ByteBuffer.wrap(numOfUsersB).getInt();
+                short numOfUsers = ByteBuffer.wrap(numOfUsersB).getShort();
                 List<String> userNameList = new LinkedList<>();
                 while (!arguments.isEmpty()) {
                     ((LinkedList<String>) userNameList).addLast(getString(arguments.removeFirst()));
@@ -224,10 +224,11 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
         LinkedList<byte[]> arguments = new LinkedList<>();
         int start;
         int stop = st - 1;
-        while (stop != len) {
+        while (stop < len-1) {
             start = stop + 1;
             stop = findZero(array, start);
-            arguments.addLast(Arrays.copyOfRange(array, start, stop));
+            if(stop<=len)
+                arguments.addLast(Arrays.copyOfRange(array, start, stop));
         }
         return arguments;
     }

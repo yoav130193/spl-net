@@ -29,6 +29,14 @@ public class AllUsers {
         return allUserList;
     }
 
+    public List<String> getAllUserStringList() {
+        List<String> stringList = new ArrayList<>();
+        for (int i = 0; i < allUserList.size(); i++) {
+            stringList.add(allUserList.get(i).getUsername());
+        }
+        return stringList;
+    }
+
     public List<User> getLoggedUsers() {
         return loggedUsers;
     }
@@ -37,7 +45,7 @@ public class AllUsers {
         return loggedUsers.size();
     }
 
-    public boolean addUser(User user){
+    public boolean addUser(User user) {
         allUserList.add(user);
         return true;
     }
