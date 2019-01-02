@@ -28,7 +28,7 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
     public Message decodeNextByte(byte nextByte) {
         //notice that the top 128 ascii characters have the same representation as their utf-8 counterparts
         //this allow us to do the following comparison
-        if (nextByte == '\n') {
+        if (nextByte == '\r') {
             return popMessage();
         }
         pushByte(nextByte);
@@ -55,51 +55,51 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                 NotificationMessage notificationMessage = (NotificationMessage) message;
                 byte[] notificationType = new byte[]{0};
                 if (notificationMessage.getNotificationType())
-                    notificationType[0] = 1;
+                    notificationType[0] = 0x1;
                 byte[] postingUser = notificationMessage.getPostingUser().getBytes();
                 byte[] content = notificationMessage.getContent().getBytes();
-                arguments = new byte[][]{opcodeB,notificationType,postingUser,{0},content,{0}};
+                arguments = new byte[][]{opcodeB,notificationType,postingUser,{0},content,{0},{'\r'}};
                 break;
             }
             case 10:{
-                opcodeB[1]=10;
+                opcodeB[1]= 0xa;
                 AckMessage ackMessage = (AckMessage) message;
                 int messageOpcode = ackMessage.getMessageOpcode();
                 byte[] messageOpcodeB = new byte[2];
-
-                ByteBuffer.wrap(messageOpcodeB).putInt(messageOpcode);
+                messageOpcodeB[0] = 0x0;
+                messageOpcodeB[1] = (byte)messageOpcode;
                 if(messageOpcode==4 || messageOpcode==7){
                         byte[] numOfUsers = new byte[2];
-                        ByteBuffer.wrap(numOfUsers).putInt(ackMessage.getNumOfUsers());
+                        ByteBuffer.wrap(numOfUsers).putShort((short)ackMessage.getNumOfUsers());
                         List<String> userNameList = ackMessage.getUserNameListSring();
                         byte[][] userNameListB = new byte[userNameList.size()*2][];
                         for (int i = 0; i < userNameListB.length; i++) {
                             userNameListB[i] = userNameList.remove(i).getBytes();
                             userNameListB[++i] = new byte[]{0};
                         }
-                         arguments= new byte[][]{opcodeB,messageOpcodeB,numOfUsers,merge(userNameListB)};
+                         arguments= new byte[][]{opcodeB,messageOpcodeB,numOfUsers,merge(userNameListB),{'\r'}};
                 }
                 else if (messageOpcode==8){
                     byte[] numOfPosts = new byte[2];
-                    ByteBuffer.wrap(numOfPosts).putInt(ackMessage.getNumOfPosts());
+                    ByteBuffer.wrap(numOfPosts).putShort((short)ackMessage.getNumOfPosts());
                     byte[] numOfFollowers = new byte[2];
-                    ByteBuffer.wrap(numOfFollowers).putInt(ackMessage.getNumOfFollowers());
+                    ByteBuffer.wrap(numOfFollowers).putShort((short)ackMessage.getNumOfFollowers());
                     byte[] numOfFollowing = new byte[2];
-                    ByteBuffer.wrap(numOfFollowing).putInt(ackMessage.getNumOfFollowing());
-                    arguments = new byte[][]{opcodeB,messageOpcodeB,numOfPosts,numOfFollowers,numOfFollowing};
+                    ByteBuffer.wrap(numOfFollowing).putShort((short)ackMessage.getNumOfFollowing());
+                    arguments = new byte[][]{opcodeB,messageOpcodeB,numOfPosts,numOfFollowers,numOfFollowing,{'\r'}};
                 }
                 else{
-                    arguments = new byte[][]{opcodeB,messageOpcodeB};
+                    arguments = new byte[][]{opcodeB,messageOpcodeB,{'\r'}};
                 }
                 break;
             }
             case 11:{
-                opcodeB[1]=11;
+                opcodeB[1] = 0xb;
                 ErrorMessage errorMessage = (ErrorMessage) message;
                 int messageOpcode = errorMessage.getMessageOpcode();
                 byte[] messageOpcodeB = new byte[2];
-                ByteBuffer.wrap(messageOpcodeB).putInt(messageOpcode);
-                arguments = new byte[][]{opcodeB,messageOpcodeB};
+                ByteBuffer.wrap(messageOpcodeB).putShort((short)messageOpcode);
+                arguments = new byte[][]{opcodeB,messageOpcodeB,{'\r'}};
                 break;
             }
             default:{
@@ -111,9 +111,9 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
     }
 
     private byte[] updateArray(byte[] result, byte[] toAdd) {
-        int len = result.length;
-        result = Arrays.copyOf(result,len+toAdd.length);
-        System.arraycopy(toAdd,0,result,len,toAdd.length);
+        int length = result.length;
+        result = Arrays.copyOf(result,length+toAdd.length);
+        System.arraycopy(toAdd,0,result,length,toAdd.length);
         return result;
     }
 
@@ -207,22 +207,24 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                 break;
             }
         }
+        len = 0;
         return message;
+
     }
 
     private int findZero(byte[] array, int start) {
-        for (int i = start; i < array.length; i++) {
+        for (int i = start; i < len; i++) {
             if (array[i] == 0)
                 return i;
         }
-        return array.length;
+        return len;
     }
 
     private LinkedList<byte[]> findArguments(byte[] array, int st) {
         LinkedList<byte[]> arguments = new LinkedList<>();
         int start;
         int stop = st - 1;
-        while (stop != array.length) {
+        while (stop != len) {
             start = stop + 1;
             stop = findZero(array, start);
             arguments.addLast(Arrays.copyOfRange(array, start, stop));

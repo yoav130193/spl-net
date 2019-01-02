@@ -40,25 +40,33 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
             case 1:
                 RegisterMessage registerMessage = (RegisterMessage) message;
                 User user = allUsers.getUser(registerMessage.getUserName());
-                if (user != null) { // a user is already registered with this message
+                if ((me!=null && me.isLogged())|| user != null) { // a user is already registered with this message
                     connections.send(connectionId, new ErrorMessage(1));
                 } else { // new user !!! :)
                     if(allUsers.addUser(new User(connectionId,registerMessage.getUserName(),registerMessage.getPassword())));
-                     connections.send(connectionId, new AckMessage(1));
+                    {
+                        System.out.println(registerMessage.getUserName() + " registered!");
+                        connections.send(connectionId, new AckMessage(1));
+                    }
                 }
                 break;
             case 2:
                 LoginMessage loginMessage = (LoginMessage) message;
                 user = allUsers.getUser(loginMessage.getUserName());
-                if (user == null || user.isLogged()) {
+                if ((me!=null && me.isLogged()) || user == null || user.isLogged()) {
                     // user doesn't exist or logged!
                     connections.send(connectionId, new ErrorMessage(2));
                 }
                 else if (user.getPassword().equals(loginMessage.getPassword())){
                     user.setConnectionId(connectionId);
                     // log in the fucking user
-                    if(allUsers.logUser(user))
+                    if(allUsers.logUser(user)) {
+                        System.out.println(user.getUsername() + " logged in!");
                         connections.send(connectionId, new AckMessage(2));
+                    }
+                }
+                else{
+                    connections.send(connectionId, new ErrorMessage(2));
                 }
                 break;
             case 3:
