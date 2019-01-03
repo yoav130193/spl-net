@@ -75,7 +75,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 break;
             case 3:
                 //LogoutMessage logoutMessage = (LogoutMessage) message;
-                if (!allUsers.getLoggedUsers().contains(me)) {
+                if (!allUsers.getLoggedUsers().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(3));
                 } else {
@@ -92,7 +92,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 List<String> usersForAck = new ArrayList<>();
                 boolean toFollow = followMessage.isFollow();
 
-                if (!allUsers.getLoggedUsers().contains(me)) {
+                if (!allUsers.getLoggedUsers().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(4));
                 } else {
@@ -139,7 +139,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 break;
             case 5:
                 PostMessage postMessage = (PostMessage) message;
-                if (!allUsers.getLoggedUsers().contains(me)) {
+                if (!allUsers.getLoggedUsers().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(5));
                 } else {
@@ -195,7 +195,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 break;
             case 6:
                 PmMessage pmMessage = (PmMessage) message;
-                if (!allUsers.getLoggedUsers().contains(me)) {
+                if (!allUsers.getLoggedUsers().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(6));
                 } else {
@@ -233,7 +233,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 break;
             case 7:
                 UserListMessage userListMessage = (UserListMessage) message;
-                if (!allUsers.getLoggedUsers().contains(me)) {
+                if (!allUsers.getLoggedUsers().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(7));
                 } else {
@@ -247,7 +247,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
             case 8:
                 StatMessage statMessage = (StatMessage) message;
 
-                if (!allUsers.getLoggedUsers().contains(me)) {
+                if (!allUsers.getLoggedUsers().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(8));
                 } else {
