@@ -35,9 +35,9 @@ public class AllUsers {
     }
 
     public List<String> getAllUserStringList() {
-        Map<String,User> stringList = new ArrayList<>();
-        for (int i = 0; i < allUserList.size(); i++) {
-            stringList.add(allUserList.get(i).getUsername());
+        List<String> stringList = new ArrayList<>();
+        for (Map.Entry entry : allUserList.entrySet()) {
+            stringList.add((String) entry.getKey());
         }
         return stringList;
     }

@@ -55,7 +55,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
             case 2:
                 LoginMessage loginMessage = (LoginMessage) message;
                 user = allUsers.getUser(loginMessage.getUserName());
-                if (me != null  || user == null || user.isLogged()) {
+                if (me != null || user == null || user.isLogged()) {
                     // user doesn't exist or logged!
                     connections.send(connectionId, new ErrorMessage(2));
                 } else if (user.getPassword().equals(loginMessage.getPassword())) {
@@ -66,8 +66,8 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                         System.out.println(user.getUsername() + " logged in!");
                         connections.send(connectionId, new AckMessage(2));
                         me = user;
-                        while(me.hasNotifications())
-                            connections.send(connectionId,me.getNotification());
+                        while (me.hasNotifications())
+                            connections.send(connectionId, me.getNotification());
                     }
                 } else {
                     connections.send(connectionId, new ErrorMessage(2));
@@ -81,10 +81,10 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 } else {
                     // I am logged
                     allUsers.getLoggedUsersMap().remove(me);
-                    System.out.println(me.getUsername()+" logged out!");
+                    me.setLogged(false);
+                    System.out.println(me.getUsername() + " logged out!");
                     connections.send(connectionId, new AckMessage(3));
                     shouldTerminate = true;
-                    me.setLogged(false);
                 }
                 break;
             case 4:
@@ -92,7 +92,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 List<String> usersForAck = new ArrayList<>();
                 boolean toFollow = followMessage.isFollow();
 
-                if (!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me == null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(4));
                 } else {
@@ -111,7 +111,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                                 // add to his followedList
                                 allUsers.getUser(followUser).getAreFollowedUserList().
                                         add(me.getUsername());
-                                System.out.println(me.getUsername()+" now follows "+followUser);
+                                System.out.println(me.getUsername() + " now follows " + followUser);
                             }
                         } else {
                             // try to not follow people
@@ -123,23 +123,24 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                                 // remove from his followedList
                                 allUsers.getUser(followUser).
                                         getAreFollowedUserList().remove(me.getUsername());
-                                System.out.println(me.getUsername()+" now unfollows "+followUser);
+                                System.out.println(me.getUsername() + " now unfollows " + followUser);
 
                             }
                         }
                     }
+                    if (usersForAck.size() == 0) {
+                        //nobody had changed
+                        connections.send(connectionId, new ErrorMessage(4));
+                    } else {
+                        connections.send(connectionId, new AckMessage(4, usersForAck, usersForAck.size()));
+                    }
                 }
-                if (usersForAck.size() == 0) {
-                    //nobody had changed
-                    connections.send(connectionId, new ErrorMessage(4));
-                } else {
-                    connections.send(connectionId, new AckMessage(4, usersForAck, usersForAck.size()));
-                }
+
 
                 break;
             case 5:
                 PostMessage postMessage = (PostMessage) message;
-                if (!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me == null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(5));
                 } else {
@@ -165,8 +166,13 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                                     me.getUsername(),
                                     newPost.getMessage());
                             connections.send(sendUser.getConectionId(), notification);
-                            if(!sendUser.isLogged())
+                            if (!sendUser.isLogged())
                                 sendUser.addAwaitingMessage(notification);
+                            // if user has logged in after the islogged check reassure that he will recieve the notification
+                            if (sendUser.isLogged()) {
+                                while (sendUser.hasNotifications())
+                                    connections.send(connectionId, sendUser.getNotification());
+                            }
                         }
                     }
 
@@ -181,21 +187,26 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                                     me.getUsername(),
                                     newPost.getMessage());
                             connections.send(specificUser.getConectionId(), notification);
-                            if(!specificUser.isLogged())
+                            if (!specificUser.isLogged())
                                 specificUser.addAwaitingMessage(notification);
+                            // if user has logged in after the islogged check reassure that he will recieve the notification
+                            if (specificUser.isLogged()) {
+                                while (specificUser.hasNotifications())
+                                    connections.send(connectionId, specificUser.getNotification());
+                            }
                         }
                     }
 
                     // add post to my sent message
                     me.getSentPostPmMessagesList().add(newPost);
-                    System.out.println(me.getUsername()+" now posted: "+newPost.getMessage());
-                    connections.send(connectionId,new AckMessage(5));
+                    System.out.println(me.getUsername() + " now posted: " + newPost.getMessage());
+                    connections.send(connectionId, new AckMessage(5));
 
                 }
                 break;
             case 6:
                 PmMessage pmMessage = (PmMessage) message;
-                if (!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me == null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(6));
                 } else {
@@ -219,35 +230,40 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                         NotificationMessage notification = new NotificationMessage(false,
                                 me.getUsername(),
                                 newPM.getMessage());
-                        connections.send(recipientUser.getConectionId(),notification
-                                );
-                        if(!recipientUser.isLogged())
+                        connections.send(recipientUser.getConectionId(), notification
+                        );
+                        if (!recipientUser.isLogged())
                             recipientUser.addAwaitingMessage(notification);
+                        // if user has logged in after the islogged check reassure that he will recieve the notification
+                        if (recipientUser.isLogged()) {
+                            while (recipientUser.hasNotifications())
+                                connections.send(connectionId, recipientUser.getNotification());
+                        }
                         // add post to my sent message
                         me.getSentPostPmMessagesList().add(newPM);
-                        connections.send(connectionId,new AckMessage((6)));
-                        System.out.println(me.getUsername()+" now PMed: "+newPM.getMessage());
+                        connections.send(connectionId, new AckMessage((6)));
+                        System.out.println(me.getUsername() + " now PMed: " + newPM.getMessage());
 
                     }
                 }
                 break;
             case 7:
                 UserListMessage userListMessage = (UserListMessage) message;
-                if (!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me == null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(7));
                 } else {
                     //I am logged in
                     connections.send(connectionId, new AckMessage(7,
                             allUsers.getAllUserStringList().size(), allUsers.getAllUserStringList()));
-                    System.out.println(me.getUsername()+" asked for userlist!");
+                    System.out.println(me.getUsername() + " asked for userlist!");
 
                 }
                 break;
             case 8:
                 StatMessage statMessage = (StatMessage) message;
 
-                if (!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me == null ||!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(8));
                 } else {
@@ -262,25 +278,11 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                                 statUser.getSentPostPmMessagesList().size()
                                 , statUser.getAreFollowedUserList().size()
                                 , statUser.getFollowUserList().size()));
-                        System.out.println(me.getUsername()+" asked for stats of "+statUser.getUsername());
+                        System.out.println(me.getUsername() + " asked for stats of " + statUser.getUsername());
                     }
                 }
 
                 break;
-                /*
-            case 9:
-                NotificationMessage notificationMessage = (NotificationMessage) message;
-
-                break;
-            case 10:
-                AckMessage ackMessage = (AckMessage) message;
-
-                break;
-            case 11:
-                ErrorMessage errorMessage = (ErrorMessage) message;
-
-                break;
-                */
         }
 
 
@@ -288,6 +290,6 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
 
     @Override
     public boolean shouldTerminate() {
-        return false;
+        return shouldTerminate;
     }
 }
