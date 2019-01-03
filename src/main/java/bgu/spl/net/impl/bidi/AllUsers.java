@@ -4,16 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class AllUsers {
 
     private Map<String, User> allUserList;
-    private Map<String, User> loggedUsers;
+    private Map<String, User> loggedUsersMap;
 
     public AllUsers() {
         allUserList = new ConcurrentHashMap<>();
-        loggedUsers = new ConcurrentHashMap<>();
+        loggedUsersMap = new ConcurrentHashMap<>();
     }
 
 
@@ -36,19 +35,19 @@ public class AllUsers {
     }
 
     public List<String> getAllUserStringList() {
-        List<String> stringList = new ArrayList<>();
+        Map<String,User> stringList = new ArrayList<>();
         for (int i = 0; i < allUserList.size(); i++) {
             stringList.add(allUserList.get(i).getUsername());
         }
         return stringList;
     }
 
-    public Map<String, User> getLoggedUsers() {
-        return loggedUsers;
+    public Map<String, User> getLoggedUsersMap() {
+        return loggedUsersMap;
     }
 
     public int getAmountOfLoggedUsers() {
-        return loggedUsers.size();
+        return loggedUsersMap.size();
     }
 
     public boolean addUser(User user) {
@@ -66,7 +65,7 @@ public class AllUsers {
     }
     */
     public boolean logUser(User user) {
-        loggedUsers.put(user.getUsername(), user);
+        loggedUsersMap.put(user.getUsername(), user);
         return true;
     }
 }
