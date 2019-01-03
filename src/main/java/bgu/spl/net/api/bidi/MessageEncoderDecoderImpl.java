@@ -179,8 +179,10 @@ public class MessageEncoderDecoderImpl implements MessageEncoderDecoder<Message>
                     if (content.charAt(i)=='@'){
                         i++;
                         String userName = "";
-                        while(content.charAt(i)!=' ')
+                        while(content.charAt(i)!=' ' && i<content.length()) {
                             userName = userName + content.charAt(i);
+                            i++;
+                        }
                         ((LinkedList<String>) extraUserNames).addLast(userName);
                     }
                 }

@@ -75,7 +75,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 break;
             case 3:
                 //LogoutMessage logoutMessage = (LogoutMessage) message;
-                if (!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me==null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(3));
                 } else {
@@ -84,7 +84,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     me.setLogged(false);
                     System.out.println(me.getUsername() + " logged out!");
                     connections.send(connectionId, new AckMessage(3));
-                    shouldTerminate = true;
+                    //shouldTerminate = true;
                 }
                 break;
             case 4:
