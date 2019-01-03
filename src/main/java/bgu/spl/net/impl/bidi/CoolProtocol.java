@@ -7,6 +7,7 @@ import bgu.spl.net.api.bidi.messages.Message;
 import bgu.spl.net.api.bidi.messages.S2C.*;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class CoolProtocol implements BidiMessagingProtocol<Message> {
@@ -75,7 +76,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 break;
             case 3:
                 //LogoutMessage logoutMessage = (LogoutMessage) message;
-                if (me==null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me == null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(3));
                 } else {
@@ -153,6 +154,8 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     //add post to the list of PostPMmessages
                     allPostPmMessages.getPostPmMessagesList()
                             .add(newPost);
+                    //check duplicate messages
+                    List<String> recipientList = new ArrayList<>();
 
                     // add post to all my followers
                     List<String> myFollowers = me.getAreFollowedUserList();
@@ -166,6 +169,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                                     me.getUsername(),
                                     newPost.getMessage());
                             connections.send(sendUser.getConectionId(), notification);
+                            recipientList.add(sendUser.getUsername());
                             if (!sendUser.isLogged())
                                 sendUser.addAwaitingMessage(notification);
                             // if user has logged in after the islogged check reassure that he will recieve the notification
@@ -177,9 +181,10 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     }
 
                     // add post to all specific users
-                    List<String> specificUsers = postMessage.getExtraUserNames();
+                    LinkedList<String> specificUsers = (LinkedList<String>) postMessage.getExtraUserNames();
                     for (int i = 0; i < specificUsers.size(); i++) {
-                        if (allUsers.getUser(specificUsers.get(i)) != null) {
+                        if (allUsers.getUser(specificUsers.get(i)) != null
+                                && !recipientList.contains(specificUsers.get(i))) {
                             User specificUser = allUsers.getUser(specificUsers.get(i));
                             specificUser.getGotPostPmMessagesList().add(newPost);
                             NotificationMessage notification = new NotificationMessage(
@@ -263,7 +268,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
             case 8:
                 StatMessage statMessage = (StatMessage) message;
 
-                if (me == null ||!allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
+                if (me == null || !allUsers.getLoggedUsersMap().containsKey(me.getUsername())) {
                     //I am not logged in
                     connections.send(connectionId, new ErrorMessage(8));
                 } else {
