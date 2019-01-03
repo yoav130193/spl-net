@@ -81,10 +81,10 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                 } else {
                     // I am logged
                     allUsers.getLoggedUsers().remove(me);
+                    me.setLogged(false);
                     System.out.println(me.getUsername()+" logged out!");
                     connections.send(connectionId, new AckMessage(3));
                     shouldTerminate = true;
-                    me.setLogged(false);
                 }
                 break;
             case 4:
@@ -167,6 +167,11 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                             connections.send(sendUser.getConectionId(), notification);
                             if(!sendUser.isLogged())
                                 sendUser.addAwaitingMessage(notification);
+                            // if user has logged in after the islogged check reassure that he will recieve the notification
+                            if (sendUser.isLogged()) {
+                                while(sendUser.hasNotifications())
+                                    connections.send(connectionId,sendUser.getNotification());
+                            }
                         }
                     }
 
@@ -183,6 +188,11 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                             connections.send(specificUser.getConectionId(), notification);
                             if(!specificUser.isLogged())
                                 specificUser.addAwaitingMessage(notification);
+                            // if user has logged in after the islogged check reassure that he will recieve the notification
+                            if (specificUser.isLogged()) {
+                                while(specificUser.hasNotifications())
+                                    connections.send(connectionId,specificUser.getNotification());
+                            }
                         }
                     }
 
@@ -223,6 +233,11 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                                 );
                         if(!recipientUser.isLogged())
                             recipientUser.addAwaitingMessage(notification);
+                        // if user has logged in after the islogged check reassure that he will recieve the notification
+                        if (recipientUser.isLogged()) {
+                            while(recipientUser.hasNotifications())
+                                connections.send(connectionId,recipientUser.getNotification());
+                        }
                         // add post to my sent message
                         me.getSentPostPmMessagesList().add(newPM);
                         connections.send(connectionId,new AckMessage((6)));
