@@ -22,8 +22,6 @@ public class ConnectionsImpl<T> implements Connections<T> {
         if (connectionHandler != null) {
             connectionHandler.send((T) msg);
         }
-        //TODO send the message
-
 
         return false;
     }
@@ -34,14 +32,12 @@ public class ConnectionsImpl<T> implements Connections<T> {
             if (entry.getValue() != null)
                 entry.getValue().send((T) msg);
         }
-        //TODO- send broadcast
 
     }
 
     @Override
     public void disconnect(int connectionId) {
-        ConnectionHandler<T> connectionHandler = connectionHandlerMap.remove(connectionId);
-        //TODO- further research
+      connectionHandlerMap.remove(connectionId);
     }
 
     public void connect(int connectionId, ConnectionHandler connectionHandler) {
@@ -49,7 +45,4 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
     }
 
-    public int getSize() {
-        return connectionHandlerMap.size();
-    }
 }

@@ -36,11 +36,12 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     public void send(T msg) {
         try {
             if (connected) {
-                out.write(encdec.encode(msg));
-                out.flush();
+                synchronized (out) {
+                    out.write(encdec.encode(msg));
+                    out.flush();
+                }
             }
         } catch (IOException e) {
-            e.printStackTrace();
         }
 
     }

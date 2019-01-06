@@ -51,21 +51,24 @@ public class AllUsers {
     }
 
     public boolean addUser(User user) {
-        allUserList.put(user.getUsername(), user);
-        return true;
+        if(allUserList.putIfAbsent(user.getUsername(),user)==null)
+            return true;
+//        synchronized (allUserList){
+//          cd  if
+//        }
+//        allUserList.put(user.getUsername(), user);
+        return false;
     }
 
-    /*
-    public User getUser(int connectionId) {
-
-        for (int i = 0; i < allUserList.size(); i++) {
-            if (allUserList.get().getConectionId() == connectionId) return allUserList.get(i);
-        }
-        return null;
-    }
-    */
     public boolean logUser(User user) {
-        loggedUsersMap.put(user.getUsername(), user);
-        return true;
+        if(loggedUsersMap.putIfAbsent(user.getUsername(),user)==null)
+            return true;
+
+//       synchronized (loggedUsersMap){
+//           if(loggedUsersMap.containsValue(user))
+//               return false;
+//           loggedUsersMap.put(user.getUsername(),user);
+//           return true;
+       return false;
     }
 }

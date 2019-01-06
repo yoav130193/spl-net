@@ -33,9 +33,6 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
 
     @Override
     public void process(Message message) {
-        //TODO- raz how the fuck to find out who am I
-        // just a temporary user that we need to change
-        // = allUsers.getUser(connectionId);
 
         switch (message.opCode) {
 
@@ -46,10 +43,12 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     connections.send(connectionId, new ErrorMessage(1));
                 } else { // new user !!! :)
                     if (allUsers.addUser(new User(connectionId, registerMessage.getUserName(), registerMessage.getPassword())))
-                        ;
                     {
                         System.out.println(registerMessage.getUserName() + " registered!");
                         connections.send(connectionId, new AckMessage(1));
+                    }
+                    else{
+                        connections.send(connectionId, new ErrorMessage(1));
                     }
                 }
                 break;
@@ -60,15 +59,17 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     // user doesn't exist or logged!
                     connections.send(connectionId, new ErrorMessage(2));
                 } else if (user.getPassword().equals(loginMessage.getPassword())) {
-                    user.setConnectionId(connectionId);
                     // log in the fucking user
                     if (allUsers.logUser(user)) {
+                        user.setConnectionId(connectionId);
                         user.setLogged(true);
                         System.out.println(user.getUsername() + " logged in!");
                         connections.send(connectionId, new AckMessage(2));
                         me = user;
                         while (me.hasNotifications())
                             connections.send(connectionId, me.getNotification());
+                    } else {
+                        connections.send(connectionId, new ErrorMessage(2));
                     }
                 } else {
                     connections.send(connectionId, new ErrorMessage(2));
@@ -81,7 +82,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     connections.send(connectionId, new ErrorMessage(3));
                 } else {
                     // I am logged
-                    allUsers.getLoggedUsersMap().remove(me);
+                    allUsers.getLoggedUsersMap().remove(me.getUsername());
                     me.setLogged(false);
                     System.out.println(me.getUsername() + " logged out!");
                     connections.send(connectionId, new AckMessage(3));
@@ -276,15 +277,22 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                     if (allUsers.getUser(statMessage.getUserName()) == null) {
                         // userName not registered
                         connections.send(connectionId, new ErrorMessage(8));
-                    } else {
-                        // userName is registered
-                        User statUser = allUsers.getUser(statMessage.getUserName());
-                        connections.send(connectionId, new AckMessage(8,
-                                statUser.getSentPostPmMessagesList().size()
-                                , statUser.getAreFollowedUserList().size()
-                                , statUser.getFollowUserList().size()));
-                        System.out.println(me.getUsername() + " asked for stats of " + statUser.getUsername());
                     }
+                    else {
+                            // userName is registered
+                            User statUser = allUsers.getUser(statMessage.getUserName());
+                            int countPost = 0;
+                            for (int i = 0; i < statUser.getSentPostPmMessagesList().size(); i++) {
+                                if (statUser.getSentPostPmMessagesList().get(i).getMessageType()
+                                        == PostPmMessages.MessageType.POSTMESSAGE)
+                                    countPost++;
+                            }
+                            connections.send(connectionId, new AckMessage(8,
+                                    countPost
+                                    , statUser.getAreFollowedUserList().size()
+                                    , statUser.getFollowUserList().size()));
+                            System.out.println(me.getUsername() + " asked for stats of " + statUser.getUsername());
+                        }
                 }
 
                 break;

@@ -53,7 +53,6 @@ public abstract class BaseServer<T> implements Server<T> {
                         connections,
                         uniqueId);
 
-                //TODO: change start (description in PDF)
                 connections.connect(uniqueId, handler);
                 // handler.getProtocol().start(uniqueId++, connections);
                 uniqueId++;

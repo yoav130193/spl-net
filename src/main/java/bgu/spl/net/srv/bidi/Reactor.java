@@ -11,6 +11,7 @@ import java.nio.channels.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
+
 public class Reactor<T> implements Server<T> {
 
     private final int port;
@@ -107,12 +108,10 @@ public class Reactor<T> implements Server<T> {
                 uniqueId);
         connections.connect(uniqueId, handler);
         uniqueId++;
-        //TODO: change start (description in PDF)
         clientChan.register(selector, SelectionKey.OP_READ, handler);
     }
 
     private void handleReadWrite(SelectionKey key) {
-        @SuppressWarnings("unchecked")
         NonBlockingConnectionHandler<T> handler = (NonBlockingConnectionHandler<T>) key.attachment();
 
         if (key.isReadable()) {
