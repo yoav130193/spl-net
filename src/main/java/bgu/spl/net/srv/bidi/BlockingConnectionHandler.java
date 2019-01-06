@@ -20,6 +20,7 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     private volatile boolean connected = true;
     private final Connections<T> connections;
     private final int connectionId;
+    private boolean firstConnect;
 
     public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, BidiMessagingProtocol<T> protocol,
                                      Connections<T> connections, int connectionId) {
@@ -28,6 +29,7 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
         this.protocol = protocol;
         this.connections = connections;
         this.connectionId = connectionId;
+        firstConnect=true;
     }
 
     @Override
@@ -46,6 +48,11 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     @Override
     public void run() {
         try (Socket sock = this.sock) { //just for automatic closing
+            if (firstConnect) {
+                this.getProtocol().start(connectionId, connections);
+                firstConnect = false;
+            }
+
             int read;
 
             in = new BufferedInputStream(sock.getInputStream());

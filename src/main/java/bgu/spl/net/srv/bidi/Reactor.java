@@ -34,22 +34,22 @@ public class Reactor<T> implements Server<T> {
         this.port = port;
         this.protocolFactory = protocolFactory;
         this.readerFactory = readerFactory;
-        this.uniqueId =0;
+        this.uniqueId = 0;
         this.connections = new ConnectionsImpl<T>();
     }
 
     @Override
     public void serve() {
-	selectorThread = Thread.currentThread();
+        selectorThread = Thread.currentThread();
         try (Selector selector = Selector.open();
-                ServerSocketChannel serverSock = ServerSocketChannel.open()) {
+             ServerSocketChannel serverSock = ServerSocketChannel.open()) {
 
             this.selector = selector; //just to be able to close
 
             serverSock.bind(new InetSocketAddress(port));
             serverSock.configureBlocking(false);
             serverSock.register(selector, SelectionKey.OP_ACCEPT);
-			System.out.println("Server started");
+            System.out.println("Server started");
 
             while (!Thread.currentThread().isInterrupted()) {
 
@@ -106,8 +106,8 @@ public class Reactor<T> implements Server<T> {
                 connections,
                 uniqueId);
         connections.connect(uniqueId, handler);
+        uniqueId++;
         //TODO: change start (description in PDF)
-        handler.getProtocol().start(uniqueId++, connections);
         clientChan.register(selector, SelectionKey.OP_READ, handler);
     }
 
@@ -122,7 +122,7 @@ public class Reactor<T> implements Server<T> {
             }
         }
 
-	    if (key.isValid() && key.isWritable()) {
+        if (key.isValid() && key.isWritable()) {
             handler.continueWrite();
         }
     }

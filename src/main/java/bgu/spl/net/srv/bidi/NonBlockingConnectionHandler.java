@@ -25,6 +25,7 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     private final Reactor reactor;
     private final Connections<T> connections;
     private final int connectionId;
+    private boolean firstConnect;
 
     public NonBlockingConnectionHandler(
             MessageEncoderDecoder<T> reader,
@@ -39,6 +40,7 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         this.reactor = reactor;
         this.connections = connections;
         this.connectionId = connectionId;
+        this.firstConnect = true;
     }
 
     public Runnable continueRead() {
@@ -52,6 +54,11 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         }
 
         if (success) {
+            if (firstConnect) {
+                this.getProtocol().start(connectionId, connections);
+                firstConnect = false;
+            }
+
             buf.flip();
             return () -> {
                 try {
@@ -71,9 +78,11 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         }
 
     }
+
     public BidiMessagingProtocol<T> getProtocol() {
         return protocol;
     }
+
     @Override
     public void send(T msg) {
         writeQueue.add(ByteBuffer.wrap(encdec.encode(msg)));
