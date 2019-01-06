@@ -104,7 +104,7 @@ public class CoolProtocol implements BidiMessagingProtocol<Message> {
                         if (followMessage.isFollow()) {
                             //try to follow people
                             if (!me.getFollowUserList().contains
-                                    (followUser)) {
+                                    (followUser) && allUsers.getUser(followUser) != null) {
                                 //not following already
                                 usersForAck.add(followUser);
                                 // add to my followList
